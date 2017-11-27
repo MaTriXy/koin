@@ -1,15 +1,15 @@
 package org.koin
 
-import org.koin.core.bean.BeanDefinition
 import org.koin.core.bean.BeanRegistry
 import org.koin.core.instance.InstanceFactory
 import org.koin.core.property.PropertyRegistry
-import org.koin.core.scope.Scope
 import org.koin.dsl.context.Context
 import org.koin.dsl.module.Module
 import org.koin.log.EmptyLogger
 import org.koin.log.Logger
-import kotlin.reflect.KClass
+import java.io.File
+import java.io.FileInputStream
+import java.util.*
 
 /**
  * Koin Context Builder
@@ -23,8 +23,37 @@ class Koin {
     /**
      * Inject properties to context
      */
-    fun properties(props: Map<String, Any>): Koin {
-        propertyResolver.addAll(props)
+    fun bindAdditionalProperties(props: Map<String, Any>): Koin {
+        if (props.isNotEmpty()) {
+            propertyResolver.addAll(props)
+        }
+        return this
+    }
+
+    /**
+     * Inject all properties from koin properties file to context
+     */
+    fun bindKoinProperties(koinPropFilename: String = "koin.properties"): Koin {
+        val classLoader: ClassLoader = Koin::class.java.classLoader
+
+        val path: String? = classLoader.getResource(koinPropFilename)?.path
+
+        if (path != null && File(path).exists()) {
+
+            val koinProperties = Properties()
+            FileInputStream(path).use { koinProperties.load(it) }
+            val nb = propertyResolver.import(koinProperties)
+            logger.log("(Properties) loaded $nb properties from '$koinPropFilename' file")
+        }
+        return this
+    }
+
+    /**
+     * Inject all system properties to context
+     */
+    fun bindSystemProperties(): Koin {
+        val nb = propertyResolver.import(System.getProperties())
+        logger.log("(Properties) loaded $nb properties from system properties")
         return this
     }
 
@@ -39,22 +68,8 @@ class Koin {
             registerDefinitions(context)
         }
 
-        logger.log("(Koin) loaded ${beanRegistry.definitions.size} definitions")
-
+        logger.log("(Registry) loaded ${beanRegistry.definitions.size} definitions")
         return koinContext
-    }
-
-    /**
-     * Provide a bean definition before building any module
-     */
-    inline fun <reified T : Any> provide(contextName: String = Scope.ROOT, additionalBinding: KClass<*>? = null, noinline definition: () -> T): Koin {
-        val clazz = T::class
-        val beanDefinition = BeanDefinition(clazz = clazz, definition = definition)
-        if (additionalBinding != null) {
-            beanDefinition.bind(additionalBinding)
-        }
-        beanRegistry.declare(beanDefinition, beanRegistry.getScope(contextName))
-        return this
     }
 
     /**
@@ -66,18 +81,13 @@ class Koin {
 
         // Add definitions
         context.definitions.forEach { definition ->
-            logger.log("(Koin) define : $definition")
+            logger.log("(Bean) define : $definition")
             beanRegistry.declare(definition, scope)
         }
 
         // Check sub contexts
         context.subContexts.forEach { subContext -> registerDefinitions(subContext, context) }
     }
-
-    /**
-     * load given module instances into current koin context
-     */
-    fun <T : Module> build(vararg modules: T): KoinContext = build(modules.asList())
 
     companion object {
         /**

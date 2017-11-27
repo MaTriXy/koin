@@ -38,24 +38,10 @@ fun KoinContext.allProperties() = propertyResolver.properties
  */
 fun KoinContext.getScope(scopeName: String) = beanRegistry.scopes.first { it.name == scopeName }
 
-//inline fun <reified T> KoinContext.getOrNull(name: String = ""): T? {
-//    var instance: T? = null
-//    try {
-//        instance = if (name.isNotEmpty()) {
-//            this.get<T>(name)
-//        } else {
-//            this.get<T>()
-//        }
-//    } catch (e: Exception) {
-//        resolutionStack.clear()
-//    }
-//    return instance
-//}
-
-/**
- * Return ROOT Scope
- */
-fun KoinContext.rootScope() = beanRegistry.rootScope
+///**
+// * Return ROOT Scope
+// */
+//fun KoinContext.rootScope() = beanRegistry.rootScope
 
 /**
  * Provide a bean definition in actual KoinContext

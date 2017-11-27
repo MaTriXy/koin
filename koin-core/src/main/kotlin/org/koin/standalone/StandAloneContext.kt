@@ -1,7 +1,5 @@
 package org.koin.standalone
 
-import org.koin.KoinContext
-
 /**
  * Koin agnostic context support
  * @author - Arnaud GIULIANI
@@ -10,10 +8,10 @@ object StandAloneContext {
     /**
      * Koin Context
      */
-    lateinit var koinContext: KoinContext
+    lateinit var koinContext: StandAloneKoinContext
 }
 
 /**
- * releaseContext any context
+ * Stand alone Koin context
  */
-fun releaseContext(name: String = "") = StandAloneContext.koinContext.release(name)
+interface StandAloneKoinContext
