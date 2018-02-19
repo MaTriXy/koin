@@ -5,10 +5,9 @@ import org.koin.core.instance.InstanceFactory
 import org.koin.core.property.PropertyRegistry
 import org.koin.dsl.context.Context
 import org.koin.dsl.module.Module
-import org.koin.log.EmptyLogger
 import org.koin.log.Logger
-import java.io.File
-import java.io.FileInputStream
+import org.koin.log.PrintLogger
+import org.koin.standalone.StandAloneContext
 import java.util.*
 
 /**
@@ -33,17 +32,13 @@ class Koin {
     /**
      * Inject all properties from koin properties file to context
      */
-    fun bindKoinProperties(koinPropFilename: String = "koin.properties"): Koin {
-        val classLoader: ClassLoader = Koin::class.java.classLoader
-
-        val path: String? = classLoader.getResource(koinPropFilename)?.path
-
-        if (path != null && File(path).exists()) {
-
+    fun bindKoinProperties(koinFile: String = "/koin.properties"): Koin {
+        val content = Koin::class.java.getResource(koinFile)?.readText()
+        content?.let {
             val koinProperties = Properties()
-            FileInputStream(path).use { koinProperties.load(it) }
+            koinProperties.load(content.byteInputStream())
             val nb = propertyResolver.import(koinProperties)
-            logger.log("(Properties) loaded $nb properties from '$koinPropFilename' file")
+            logger.log("[init] loaded $nb properties from '$koinFile' file")
         }
         return this
     }
@@ -51,25 +46,30 @@ class Koin {
     /**
      * Inject all system properties to context
      */
-    fun bindSystemProperties(): Koin {
-        val nb = propertyResolver.import(System.getProperties())
-        logger.log("(Properties) loaded $nb properties from system properties")
+    fun bindEnvironmentProperties(): Koin {
+        val n1 = propertyResolver.import(System.getProperties())
+        logger.log("[init] loaded $n1 properties from properties")
+        val n2 = propertyResolver.import(System.getenv().toProperties())
+        logger.log("[init] loaded $n2 properties from env properties")
         return this
     }
 
     /**
-     * load given list of module instances into current koin context
+     * load given list of module instances into current StandAlone koin context
      */
-    fun <T : Module> build(modules: List<T>): KoinContext {
-        val koinContext = KoinContext(beanRegistry, propertyResolver, instanceFactory)
+    fun build(modules: List<Module>): Koin {
+        StandAloneContext.koinContext = KoinContext(beanRegistry, propertyResolver, instanceFactory)
+
         modules.forEach { module ->
-            module.koinContext = koinContext
-            val context = module.context()
-            registerDefinitions(context)
+            registerDefinitions(module())
         }
 
-        logger.log("(Registry) loaded ${beanRegistry.definitions.size} definitions")
-        return koinContext
+        logger.log("[init] loaded ${beanRegistry.definitions.size} definitions")
+
+        if (Koin.useContextIsolation) {
+            logger.log("[init] context isolation activated")
+        }
+        return this
     }
 
     /**
@@ -81,7 +81,7 @@ class Koin {
 
         // Add definitions
         context.definitions.forEach { definition ->
-            logger.log("(Bean) define : $definition")
+            logger.log("[init] declare : $definition")
             beanRegistry.declare(definition, scope)
         }
 
@@ -93,6 +93,11 @@ class Koin {
         /**
          * Koin Logger
          */
-        var logger: Logger = EmptyLogger()
+        var logger: Logger = PrintLogger()
+
+        /**
+         * Context isolation/visibility check
+         */
+        var useContextIsolation = false
     }
 }

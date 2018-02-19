@@ -8,10 +8,21 @@ import org.koin.core.scope.Scope
 import java.util.*
 
 /**
+ * Start Koin Android features
+ * - assets/koin.proeprties loading
+ * - application/context binding
+ */
+infix fun Koin.with(application: Application) {
+    Koin.logger.log("[init] Load Android features")
+    bindAndroidProperties(application).init(application)
+}
+
+/**
  * init android Application dependency in Koin context
  * @param application - Android Application instance
  */
 fun Koin.init(application: Application): Koin {
+    Koin.logger.log("[init] ~ added Android application bean reference")
     // provide Application defintion
     beanRegistry.declare(BeanDefinition(clazz = Application::class, bindTypes = listOf(Context::class), definition = { application }), Scope.root())
     return this
@@ -24,17 +35,21 @@ fun Koin.init(application: Application): Koin {
  */
 fun Koin.bindAndroidProperties(application: Application, koinPropertyFile: String = "koin.properties"): Koin {
     val koinProperties = Properties()
-    val hasFile = application.assets.list("").contains(koinPropertyFile)
-    if (hasFile) {
-        try {
-            application.assets.open("koin.properties").use { koinProperties.load(it) }
-            val nb = propertyResolver.import(koinProperties)
-            Koin.logger.log("(Properties) loaded $nb properties from assets/koin.properties")
-        } catch (e: Exception) {
-            Koin.logger.log("[ERROR] bind Android properties error : $e")
+    try {
+        val hasFile = application.assets.list("").contains(koinPropertyFile)
+        if (hasFile) {
+            try {
+                application.assets.open("koin.properties").use { koinProperties.load(it) }
+                val nb = propertyResolver.import(koinProperties)
+                Koin.logger.log("[Properties] loaded $nb properties from assets/koin.properties")
+            } catch (e: Exception) {
+                Koin.logger.log("[Properties] error for binding properties : $e")
+            }
+        } else {
+            Koin.logger.log("[Properties] no assets/koin.properties file to load")
         }
-    } else {
-        Koin.logger.log("(Properties) no assets/koin.properties file to load")
+    } catch (e: Exception) {
+        Koin.logger.err("[Properties] Error while loading properties : $e")
     }
     return this
 }

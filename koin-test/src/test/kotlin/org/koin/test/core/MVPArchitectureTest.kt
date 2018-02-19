@@ -3,34 +3,28 @@ package org.koin.test.core
 import org.junit.Assert
 import org.junit.Test
 import org.koin.core.scope.Scope
-import org.koin.dsl.module.Module
-import org.koin.standalone.startKoin
-import org.koin.test.KoinTest
+import org.koin.dsl.module.applicationContext
+import org.koin.standalone.StandAloneContext.startKoin
+import org.koin.standalone.get
+import org.koin.test.AbstractKoinTest
 import org.koin.test.ext.junit.assertContexts
 import org.koin.test.ext.junit.assertDefinedInScope
 import org.koin.test.ext.junit.assertDefinitions
 import org.koin.test.ext.junit.assertRemainingInstances
-import org.koin.test.get
 
-class MVPArchitectureTest : KoinTest {
+class MVPArchitectureTest : AbstractKoinTest() {
 
-    class MVPModule : Module() {
-        override fun context() =
-                applicationContext {
-                    provide { Repository(get()) }
+    val MVPModule = applicationContext {
+        provide { Repository(get()) }
 
-                    context("ViewContext") {
-                        provideFactory { View(get()) }
-                        provideFactory { Presenter(get()) }
-                    }
-                }
+        context("ViewContext") {
+            factory { View(get()) }
+            factory { Presenter(get()) }
+        }
     }
 
-    class DataSourceModule : Module() {
-        override fun context() =
-                applicationContext {
-                    provide { DebugDatasource() } bind (Datasource::class)
-                }
+    val DataSourceModule = applicationContext {
+        provide { DebugDatasource() } bind Datasource::class
     }
 
 
@@ -42,7 +36,7 @@ class MVPArchitectureTest : KoinTest {
 
     @Test
     fun `should create all MVP hierarchy`() {
-        startKoin(listOf(MVPModule(), DataSourceModule()))
+        startKoin(listOf(MVPModule, DataSourceModule))
 
         val view = get<View>()
         val presenter = get<Presenter>()

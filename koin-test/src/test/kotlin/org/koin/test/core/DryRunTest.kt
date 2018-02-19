@@ -2,46 +2,34 @@ package org.koin.test.core
 
 import org.junit.Assert
 import org.junit.Assert.fail
-import org.junit.Before
 import org.junit.Test
-import org.koin.Koin
-import org.koin.dsl.module.Module
+import org.koin.dsl.module.applicationContext
 import org.koin.error.BeanInstanceCreationException
-import org.koin.log.PrintLogger
-import org.koin.standalone.startKoin
-import org.koin.test.KoinTest
+import org.koin.standalone.StandAloneContext.startKoin
+import org.koin.standalone.get
+import org.koin.test.AbstractKoinTest
 import org.koin.test.dryRun
 import org.koin.test.ext.junit.assertContexts
 import org.koin.test.ext.junit.assertDefinitions
 import org.koin.test.ext.junit.assertRemainingInstances
-import org.koin.test.get
 
-class DryRunTest : KoinTest {
+class DryRunTest : AbstractKoinTest() {
 
-    class SimpleModule() : Module() {
-        override fun context() = applicationContext {
-            provide { ComponentA() }
-            provide { ComponentB(get()) }
-        }
+    val SimpleModule = applicationContext {
+        provide { ComponentA() }
+        provide { ComponentB(get()) }
     }
 
-    class BrokenModule() : Module() {
-        override fun context() = applicationContext {
-            provide { ComponentB(get()) }
-        }
+    val BrokenModule = applicationContext {
+        provide { ComponentB(get()) }
     }
 
     class ComponentA()
     class ComponentB(val componentA: ComponentA)
 
-    @Before
-    fun before() {
-        Koin.logger = PrintLogger()
-    }
-
     @Test
     fun `successful dry run`() {
-        startKoin(listOf(SimpleModule()))
+        startKoin(listOf(SimpleModule))
         dryRun()
 
         assertDefinitions(2)
@@ -57,7 +45,7 @@ class DryRunTest : KoinTest {
     @Test
     fun `unsuccessful dry run`() {
         try {
-            startKoin(listOf(BrokenModule()))
+            startKoin(listOf(BrokenModule))
             dryRun()
             fail()
         } catch (e: BeanInstanceCreationException) {

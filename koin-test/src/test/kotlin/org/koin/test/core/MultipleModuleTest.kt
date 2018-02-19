@@ -4,53 +4,43 @@ package org.koin.test.core
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Test
-import org.koin.dsl.module.Module
-import org.koin.standalone.startKoin
-import org.koin.test.KoinTest
+import org.koin.core.scope.Scope
+import org.koin.dsl.module.applicationContext
+import org.koin.standalone.StandAloneContext.startKoin
+import org.koin.standalone.get
+import org.koin.test.AbstractKoinTest
 import org.koin.test.ext.junit.assertContexts
 import org.koin.test.ext.junit.assertDefinedInScope
 import org.koin.test.ext.junit.assertDefinitions
 import org.koin.test.ext.junit.assertRemainingInstances
-import org.koin.test.get
 
-class MultipleModuleTest : KoinTest {
+class MultipleModuleTest : AbstractKoinTest() {
 
     class ComponentA
     class ComponentB(val componentA: ComponentA)
     class ComponentC(val componentA: ComponentA, val componentB: ComponentB)
 
-    class SimpleModuleA() : Module() {
-        override fun context() = applicationContext {
-            context(name = "A") {
-                provide { ComponentA() }
-            }
-        }
+    val SimpleModuleA = applicationContext {
+        provide { ComponentA() }
     }
 
-    class SimpleModuleB() : Module() {
-        override fun context() = applicationContext {
-            context(name = "B") {
-                provide { ComponentB(get()) }
-            }
-        }
+    val SimpleModuleB = applicationContext {
+        provide { ComponentB(get()) }
     }
 
-    class SimpleModuleC() : Module() {
-        override fun context() = applicationContext {
-            context(name = "C") {
-                provide { ComponentC(get(), get()) }
-            }
+    val SimpleModuleC = applicationContext {
+        context(name = "C") {
+            provide { ComponentC(get(), get()) }
         }
     }
-
 
     @Test
     fun `load mulitple modules`() {
-        startKoin(listOf(SimpleModuleA(), SimpleModuleB(), SimpleModuleC()))
+        startKoin(listOf(SimpleModuleA, SimpleModuleB, SimpleModuleC))
 
         assertRemainingInstances(0)
         assertDefinitions(3)
-        assertContexts(4)
+        assertContexts(2)
 
         assertNotNull(get<ComponentA>())
         assertNotNull(get<ComponentB>())
@@ -69,9 +59,9 @@ class MultipleModuleTest : KoinTest {
 
         assertRemainingInstances(3)
         assertDefinitions(3)
-        assertContexts(4)
-        assertDefinedInScope(ComponentA::class, "A")
-        assertDefinedInScope(ComponentB::class, "B")
+        assertContexts(2)
+        assertDefinedInScope(ComponentA::class, Scope.ROOT)
+        assertDefinedInScope(ComponentB::class, Scope.ROOT)
         assertDefinedInScope(ComponentC::class, "C")
     }
 }
