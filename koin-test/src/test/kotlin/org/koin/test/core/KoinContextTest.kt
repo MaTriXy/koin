@@ -8,21 +8,21 @@ import org.koin.error.MissingPropertyException
 import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
 import org.koin.standalone.getProperty
-import org.koin.test.AbstractKoinTest
+import org.koin.test.AutoCloseKoinTest
 import org.koin.test.ext.junit.assertContexts
 import org.koin.test.ext.junit.assertDefinitions
 import org.koin.test.ext.junit.assertRemainingInstances
 
-class KoinContextTest : AbstractKoinTest() {
+class KoinContextTest : AutoCloseKoinTest() {
 
     val CircularDeps = applicationContext {
-        provide { ComponentA(get()) }
-        provide { ComponentB(get()) }
+        bean { ComponentA(get()) }
+        bean { ComponentB(get()) }
     }
 
 
     val SingleModule = applicationContext {
-        provide { ComponentA(get()) }
+        bean { ComponentA(get()) }
     }
 
 
@@ -107,7 +107,7 @@ class KoinContextTest : AbstractKoinTest() {
     fun `assert given properties are injected`() {
 
         // Should read koin.properties file which contains OS_VERSION definition
-        startKoin(arrayListOf(SingleModule), properties = mapOf(GIVEN_PROP to VALUE_ANDROID))
+        startKoin(arrayListOf(SingleModule), extraProperties = mapOf(GIVEN_PROP to VALUE_ANDROID))
         assertEquals(VALUE_ANDROID, getProperty(GIVEN_PROP))
     }
 
@@ -115,7 +115,7 @@ class KoinContextTest : AbstractKoinTest() {
     fun `assert given properties are injected but override koin properties`() {
 
         // Should read koin.properties file which contains OS_VERSION definition
-        startKoin(arrayListOf(SingleModule), properties = mapOf(TEST_KOIN to VALUE_ANDROID))
+        startKoin(arrayListOf(SingleModule), extraProperties = mapOf(TEST_KOIN to VALUE_ANDROID))
         assertEquals(VALUE_ANDROID, getProperty(TEST_KOIN))
         assertEquals(VALUE_WEIRD, getProperty(OS_VERSION))
     }
@@ -126,7 +126,7 @@ class KoinContextTest : AbstractKoinTest() {
         // Should read koin.properties file which contains OS_VERSION definition
         startKoin(arrayListOf(SingleModule),
                 useEnvironmentProperties = true,
-                properties = mapOf(GIVEN_PROP to VALUE_ANDROID, TEST_KOIN to VALUE_ANDROID))
+                extraProperties = mapOf(GIVEN_PROP to VALUE_ANDROID, TEST_KOIN to VALUE_ANDROID))
 
         assertEquals(VALUE_ANDROID, getProperty(GIVEN_PROP))
         assertEquals(VALUE_ANDROID, getProperty(TEST_KOIN))

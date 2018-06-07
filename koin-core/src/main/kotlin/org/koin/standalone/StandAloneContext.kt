@@ -1,7 +1,11 @@
 package org.koin.standalone
 
+import org.koin.ContextCallback
 import org.koin.Koin
 import org.koin.KoinContext
+import org.koin.core.bean.BeanRegistry
+import org.koin.core.instance.InstanceFactory
+import org.koin.core.property.PropertyRegistry
 import org.koin.dsl.module.Module
 import org.koin.error.AlreadyStartedException
 
@@ -19,24 +23,110 @@ object StandAloneContext {
     lateinit var koinContext: StandAloneKoinContext
 
     /**
-     * Koin starter
+     * Load Koin modules - whether Koin is already started or not
+     * allow late module definition load (e.g: libraries ...)
+     *
+     * @param modules : List of Module
      */
-    fun startKoin(list: List<Module>, useEnvironmentProperties: Boolean = false, properties: Map<String, Any> = HashMap()): Koin = synchronized(this) {
+    fun loadKoinModules(vararg modules: Module): Koin = synchronized(this) {
+        createContextIfNeeded()
+        return KoinContext().build(modules.toList())
+    }
+
+    /**
+     * Load Koin modules - whether Koin is already started or not
+     * allow late module definition load (e.g: libraries ...)
+     *
+     * @param modules : List of Module
+     */
+    fun loadKoinModules(modules: List<Module>): Koin = synchronized(this) {
+        createContextIfNeeded()
+        return KoinContext().build(modules)
+    }
+
+    /**
+     * Get koin context
+     */
+    private fun KoinContext() = Koin(koinContext as KoinContext)
+
+    /**
+     * Create Koin context if needed :)
+     */
+    private fun createContextIfNeeded() = synchronized(this) {
+        if (!isStarted) {
+            Koin.logger.log("[context] create")
+            val beanRegistry = BeanRegistry()
+            val propertyResolver = PropertyRegistry()
+            val instanceFactory = InstanceFactory()
+            koinContext = KoinContext(beanRegistry, propertyResolver, instanceFactory)
+            isStarted = true
+        }
+    }
+
+    /**
+     * Register Context callbacks
+     * @see ContextCallback - Context CallBack
+     */
+    fun registerContextCallBack(contextCallback: ContextCallback) {
+        Koin.logger.log("[context] callback registering with $contextCallback")
+        KoinContext().koinContext.contextCallback = contextCallback
+    }
+
+    /**
+     * Load Koin properties - whether Koin is already started or not
+     * Will look at koin.properties file
+     *
+     * @param useEnvironmentProperties - environment properties
+     * @param useKoinPropertiesFile - koin.properties file
+     * @param extraProperties - additional properties
+     */
+    fun loadProperties(
+        useEnvironmentProperties: Boolean = false,
+        useKoinPropertiesFile: Boolean = true,
+        extraProperties: Map<String, Any> = HashMap()
+    ): Koin = synchronized(this) {
+        createContextIfNeeded()
+
+        val koin = KoinContext()
+
+        if (useKoinPropertiesFile) {
+            Koin.logger.log("[properties] load koin.properties")
+            koin.bindKoinProperties()
+        }
+
+        if (extraProperties.isNotEmpty()) {
+            Koin.logger.log("[properties] load extras properties : ${extraProperties.size}")
+            koin.bindAdditionalProperties(extraProperties)
+        }
+
+        if (useEnvironmentProperties) {
+            Koin.logger.log("[properties] load environment properties")
+            koin.bindEnvironmentProperties()
+        }
+        return koin
+    }
+
+    /**
+     * Koin starter function to load modules and extraProperties
+     * Throw AlreadyStartedException if already started
+     * @param list : Modules
+     * @param useEnvironmentProperties - use environment extraProperties
+     * @param useKoinPropertiesFile - use /koin.extraProperties file
+     * @param extraProperties - extra extraProperties
+     */
+    fun startKoin(
+        list: List<Module>,
+        useEnvironmentProperties: Boolean = false,
+        useKoinPropertiesFile: Boolean = true,
+        extraProperties: Map<String, Any> = HashMap()
+    ): Koin {
         if (isStarted) {
-            throw AlreadyStartedException()
+            throw AlreadyStartedException("Koin is already started. Run startKoin only once or use loadKoinModules")
         }
-
-        val koin = if (useEnvironmentProperties) {
-            // Koin properties will override system properties
-            Koin().bindKoinProperties().bindAdditionalProperties(properties).bindEnvironmentProperties()
-        } else {
-            Koin().bindKoinProperties().bindAdditionalProperties(properties)
-        }
-
-        // Build koin context
-        val build = koin.build(list)
-        isStarted = true
-        return build
+        createContextIfNeeded()
+        loadKoinModules(list)
+        loadProperties(useEnvironmentProperties, useKoinPropertiesFile, extraProperties)
+        return KoinContext()
     }
 
     /**

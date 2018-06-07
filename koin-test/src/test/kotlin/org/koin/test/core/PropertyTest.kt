@@ -1,7 +1,7 @@
 package org.koin.test.core
 
-import junit.framework.Assert.fail
 import org.junit.Assert
+import org.junit.Assert.fail
 import org.junit.Test
 import org.koin.core.scope.Scope
 import org.koin.dsl.module.applicationContext
@@ -10,38 +10,54 @@ import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
 import org.koin.standalone.getProperty
 import org.koin.standalone.setProperty
-import org.koin.test.AbstractKoinTest
+import org.koin.test.AutoCloseKoinTest
 import org.koin.test.ext.junit.*
 
-class PropertyTest : AbstractKoinTest() {
+class PropertyTest : AutoCloseKoinTest() {
     val SimpleModule = applicationContext {
 
-        provide { ComponentA(getProperty(KEY)) }
-        provide { ComponentB(get()) }
+        bean { ComponentA(getProperty(KEY)) }
+        bean { ComponentB(get()) }
     }
 
     val NoPropertyModule = applicationContext {
 
-        provide { ComponentA(getProperty(KEY)) }
-        provide { ComponentB(get()) }
+        bean { ComponentA(getProperty(KEY)) }
+        bean { ComponentB(get()) }
     }
 
     val ComplexModule = applicationContext {
         context("A") {
-            provide { ComponentB(get()) }
-            provide { ComponentA(getProperty(KEY)) }
+            bean { ComponentB(get()) }
+            bean { ComponentA(getProperty(KEY)) }
         }
     }
 
     val MoreComplexModule = applicationContext {
         context("A") {
-            provide { ComponentB(get()) }
+            bean { ComponentB(get()) }
             factory { ComponentA(getProperty(KEY)) }
         }
     }
 
     class ComponentA(val url: String)
     class ComponentB(val componentA: ComponentA)
+
+    @Test
+    fun `should load integer value`() {
+        startKoin(listOf(SimpleModule))
+
+        val number = getProperty<Int>("number")
+        Assert.assertEquals(1234, number)
+    }
+
+    @Test
+    fun `should load float value`() {
+        startKoin(listOf(SimpleModule))
+
+        val decimal = getProperty<Float>("decimal")
+        Assert.assertEquals(1.42f, decimal)
+    }
 
     @Test
     fun `should inject external property`() {
@@ -61,13 +77,13 @@ class PropertyTest : AbstractKoinTest() {
         assertContexts(1)
         assertDefinedInScope(ComponentA::class, Scope.ROOT)
         assertDefinedInScope(ComponentB::class, Scope.ROOT)
-        assertProperties(1)
+        assertProperties(3)
     }
 
 
     @Test
     fun `should inject internal property`() {
-        startKoin(listOf(SimpleModule), properties = mapOf(KEY to VALUE))
+        startKoin(listOf(SimpleModule), extraProperties = mapOf(KEY to VALUE))
 
         val url = getProperty<String>(KEY)
         val a = get<ComponentA>()
@@ -82,7 +98,7 @@ class PropertyTest : AbstractKoinTest() {
         assertContexts(1)
         assertDefinedInScope(ComponentA::class, Scope.ROOT)
         assertDefinedInScope(ComponentB::class, Scope.ROOT)
-        assertProperties(1)
+        assertProperties(3)
     }
 
     @Test
@@ -103,7 +119,7 @@ class PropertyTest : AbstractKoinTest() {
         assertContexts(2)
         assertDefinedInScope(ComponentA::class, "A")
         assertDefinedInScope(ComponentB::class, "A")
-        assertProperties(1)
+        assertProperties(3)
     }
 
     @Test
@@ -147,7 +163,7 @@ class PropertyTest : AbstractKoinTest() {
         assertContexts(1)
         assertDefinedInScope(ComponentA::class, Scope.ROOT)
         assertDefinedInScope(ComponentB::class, Scope.ROOT)
-        assertProperties(0)
+        assertProperties(2)
     }
 
     @Test
@@ -178,7 +194,7 @@ class PropertyTest : AbstractKoinTest() {
         assertDefinitions(2)
 
         assertContexts(2)
-        assertProperties(1)
+        assertProperties(3)
         assertDefinedInScope(ComponentA::class, "A")
         assertDefinedInScope(ComponentB::class, "A")
     }

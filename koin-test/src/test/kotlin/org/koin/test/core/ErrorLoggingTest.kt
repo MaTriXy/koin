@@ -5,14 +5,19 @@ import org.junit.Test
 import org.koin.dsl.module.applicationContext
 import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
-import org.koin.test.AbstractKoinTest
+import org.koin.test.AutoCloseKoinTest
 
 
-class ErrorLoggingTest : AbstractKoinTest() {
+class ErrorLoggingTest : AutoCloseKoinTest() {
 
     val module = applicationContext {
         bean { ComponentA() }
         bean { ComponentB(get()) }
+    }
+
+    val cyclicModule = applicationContext {
+        bean { ComponentAA(get()) }
+        bean { ComponentAB(get()) }
     }
 
     class ComponentA {
@@ -22,6 +27,9 @@ class ErrorLoggingTest : AbstractKoinTest() {
     }
 
     class ComponentB(val a: ComponentA)
+
+    class ComponentAA(val componentAB: ComponentAB)
+    class ComponentAB(val componentAA: ComponentAA)
 
     @Test
     fun `should not inject generic interface component`() {
@@ -41,6 +49,18 @@ class ErrorLoggingTest : AbstractKoinTest() {
 
         try {
             get<ComponentB>()
+            fail()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    @Test
+    fun `should not inject cyclic deps`() {
+        startKoin(listOf(cyclicModule))
+
+        try {
+            get<ComponentAA>()
             fail()
         } catch (e: Exception) {
             e.printStackTrace()
