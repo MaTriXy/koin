@@ -14,7 +14,7 @@ class CreateAPITest : KoinTest {
     @Test
     fun `should find 1st constructor and build`() {
         val koin = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 single { ComponentA() }
                 single { ComponentB(get()) }
@@ -27,10 +27,10 @@ class CreateAPITest : KoinTest {
         println("create api in $duration ms")
 
         val createKoin = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 single { ComponentA() }
-                single { create<ComponentB>(this) }
+                single { create<ComponentB>() }
             })
         }.koin
 
@@ -44,9 +44,9 @@ class CreateAPITest : KoinTest {
     fun `create with missing dependency`() {
         try {
             val koin = koinApplication {
-                logger(Level.DEBUG)
+                printLogger(Level.DEBUG)
                 modules(module {
-                    single { create<ComponentB>(this) }
+                    single { create<ComponentB>() }
                 })
             }.koin
 
@@ -60,9 +60,9 @@ class CreateAPITest : KoinTest {
     @Test
     fun `create with empty ctor`() {
         val koin = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
-                single { create<ComponentA>(this) }
+                single { create<ComponentA>() }
             })
         }.koin
 
@@ -72,10 +72,10 @@ class CreateAPITest : KoinTest {
     @Test
     fun `create for interface`() {
         val koin = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 single { ComponentA() }
-                single<Component> { create<ComponentD>(this) }
+                single<Component> { create<ComponentD>() }
             })
         }.koin
 
@@ -85,10 +85,10 @@ class CreateAPITest : KoinTest {
     @Test
     fun `create factory for interface`() {
         val koin = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 single { ComponentA() }
-                factory<Component> { create<ComponentD>(this) }
+                factory<Component> { create<ComponentD>() }
             })
         }.koin
 
@@ -101,10 +101,10 @@ class CreateAPITest : KoinTest {
     @Test
     fun `create API overhead`() {
         val koin = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
-                single { create<ComponentA>(this) }
-                factory<Component> { create<ComponentD>(this) }
+                single { create<ComponentA>() }
+                factory<Component> { create<ComponentD>() }
             })
         }.koin
 

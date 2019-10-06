@@ -18,7 +18,7 @@ package org.koin.java
 import org.koin.core.Koin
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.ParametersDefinition
-import org.koin.core.scope.ScopeInstance
+import org.koin.core.qualifier.Qualifier
 
 /**
  * Koin Java Helper - inject/get into Java code
@@ -31,42 +31,59 @@ object KoinJavaComponent {
     /**
      * Retrieve given dependency lazily
      * @param clazz - dependency class
-     * @param name - bean canonicalName / optional
-     * @param scope
+     * @param qualifier - bean canonicalName / optional
+     * @param scope - scope
      * @param parameters - dependency parameters / optional
      */
     @JvmOverloads
     @JvmStatic
     fun <T : Any> inject(
-        clazz: Class<T>,
-        name: String? = null,
-        scope: ScopeInstance? = null,
-        parameters: ParametersDefinition? = null
+            clazz: Class<T>,
+            qualifier: Qualifier? = null,
+            parameters: ParametersDefinition? = null
     ): Lazy<T> {
-        return lazy { get(clazz, name, scope, parameters) }
+        return lazy { get(clazz, qualifier, parameters) }
     }
 
     /**
      * Retrieve given dependency
      * @param clazz - dependency class
-     * @param name - bean canonicalName / optional
+     * @param qualifier - bean canonicalName / optional
      * @param scope - scope
      * @param parameters - dependency parameters / optional
      */
     @JvmOverloads
     @JvmStatic
     fun <T : Any> get(
-        clazz: Class<T>,
-        name: String? = null,
-        scope: ScopeInstance? = null,
-        parameters: ParametersDefinition? = null
+            clazz: Class<T>,
+            qualifier: Qualifier? = null,
+            parameters: ParametersDefinition? = null
     ): T {
-        return getKoin().get(
-            clazz.kotlin,
-            name,
-            scope,
-            parameters
+        val kClass = clazz.kotlin
+        return getKoin().get(kClass,
+                qualifier,
+                parameters) ?: getKoin().get(
+                kClass,
+                qualifier,
+                parameters
         )
+    }
+
+    /**
+     * Retrieve given dependency
+     * @param clazz - dependency class
+     * @param qualifier - bean canonicalName / optional
+     * @param scope - scope
+     * @param parameters - dependency parameters / optional
+     */
+    @JvmOverloads
+    @JvmStatic
+    fun <P : Any, S : Any> bind(
+            primary: Class<P>,
+            secondary: Class<S>,
+            parameters: ParametersDefinition? = null
+    ): S {
+        return getKoin().bind(primary.kotlin, secondary.kotlin, parameters)
     }
 
     /**

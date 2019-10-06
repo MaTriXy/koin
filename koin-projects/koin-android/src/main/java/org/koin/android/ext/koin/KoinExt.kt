@@ -23,7 +23,6 @@ import org.koin.core.KoinApplication
 import org.koin.core.KoinApplication.Companion.logger
 import org.koin.core.definition.DefinitionFactory
 import org.koin.core.logger.Level
-import org.koin.core.logger.Logger
 import java.util.*
 
 /**
@@ -35,14 +34,11 @@ import java.util.*
 /**
  * Setup Android Logger for Koin
  * @param level
- * @param Logger
  */
 fun KoinApplication.androidLogger(
-        level: Level = Level.INFO,
-        log: Logger = AndroidLogger()
+    level: Level = Level.INFO
 ): KoinApplication {
-    logger = log
-    logger.level = level
+    logger = AndroidLogger(level)
     return this
 }
 
@@ -55,10 +51,10 @@ fun KoinApplication.androidContext(androidContext: Context): KoinApplication {
         logger.info("[init] declare Android Context")
     }
 
-    koin.beanRegistry.saveDefinition(DefinitionFactory.createSingle { androidContext })
+    koin.rootScope.beanRegistry.saveDefinition(DefinitionFactory.createSingle { androidContext })
 
     if (androidContext is Application) {
-        koin.beanRegistry.saveDefinition(DefinitionFactory.createSingle<Application> { androidContext })
+        koin.rootScope.beanRegistry.saveDefinition(DefinitionFactory.createSingle<Application> { androidContext })
     }
     return this
 }
@@ -69,7 +65,7 @@ fun KoinApplication.androidContext(androidContext: Context): KoinApplication {
  * @param koinPropertyFile
  */
 fun KoinApplication.androidFileProperties(
-        koinPropertyFile: String = "koin.properties"
+    koinPropertyFile: String = "koin.properties"
 ): KoinApplication {
     val koinProperties = Properties()
     val androidContext = koin.get<Context>()

@@ -20,9 +20,20 @@ class PerfsTest {
         app.close()
     }
 
-    @SuppressWarnings("unused")
+    /*
+    Perfs on MBP 2018
+        started in 148.528942 ms
+        measured executed in 1.03463 ms
+        started in 0.966499 ms
+        measured executed in 0.036298 ms
+     */
     @Test
     fun `perfModule400 module perfs`() {
+        runPerfs()
+        runPerfs()
+    }
+
+    private fun runPerfs() {
         val (app, duration) = measureDuration {
             koinApplication {
                 modules(perfModule400)

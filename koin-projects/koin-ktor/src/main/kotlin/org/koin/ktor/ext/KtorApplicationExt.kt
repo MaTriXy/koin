@@ -17,12 +17,9 @@ package org.koin.ktor.ext
 
 import io.ktor.application.Application
 import org.koin.core.Koin
-import org.koin.core.KoinApplication
 import org.koin.core.context.GlobalContext
-import org.koin.core.context.startKoin
 import org.koin.core.parameter.ParametersDefinition
-import org.koin.core.scope.ScopeInstance
-import org.koin.dsl.KoinAppDeclaration
+import org.koin.core.qualifier.Qualifier
 
 /**
  * Ktor Koin extensions
@@ -32,53 +29,33 @@ import org.koin.dsl.KoinAppDeclaration
  */
 
 /**
- * Help start Koin cntofor Ktor
- */
-fun Application.installKoin(
-    koinApplication: KoinApplication
-) {
-    startKoin(koinApplication)
-}
-
-/**
- * Help start Koin cntofor Ktor
- */
-fun Application.installKoin(
-    koinApplication: KoinAppDeclaration
-) {
-    startKoin(koinApplication)
-}
-
-/**
  * Help work on ModuleDefinition
  */
 fun Application.getKoin(): Koin = GlobalContext.get().koin
 
 /**
  * inject lazily given dependency
- * @param name - bean name / optional
+ * @param qualifier - bean name / optional
  * @param scope
  * @param parameters
  */
 inline fun <reified T : Any> Application.inject(
-    name: String = "",
-    scope: ScopeInstance? = null,
+    qualifier: Qualifier? = null,
     noinline parameters: ParametersDefinition? = null
 ) =
-    lazy { get<T>(name, scope, parameters) }
+        lazy { get<T>(qualifier, parameters) }
 
 /**
  * Retrieve given dependency for KoinComponent
- * @param name - bean name / optional
+ * @param qualifier - bean name / optional
  * @param scope
  * @param parameters
  */
 inline fun <reified T : Any> Application.get(
-    name: String = "",
-    scope: ScopeInstance? = null,
+    qualifier: Qualifier? = null,
     noinline parameters: ParametersDefinition? = null
 ) =
-    getKoin().get<T>(name, scope, parameters)
+        getKoin().get<T>(qualifier, parameters)
 
 /**
  * Retrieve given property for KoinComponent
@@ -86,7 +63,7 @@ inline fun <reified T : Any> Application.get(
  * throw MissingPropertyException if property is not found
  */
 inline fun <reified T> Application.getProperty(key: String) =
-    getKoin().getProperty<T>(key)
+        getKoin().getProperty<T>(key)
 
 /**
  * Retrieve given property for KoinComponent
@@ -97,4 +74,4 @@ inline fun <reified T> Application.getProperty(key: String) =
  *
  */
 inline fun <reified T> Application.getProperty(key: String, defaultValue: T) =
-    getKoin().getProperty(key) ?: defaultValue
+        getKoin().getProperty(key) ?: defaultValue

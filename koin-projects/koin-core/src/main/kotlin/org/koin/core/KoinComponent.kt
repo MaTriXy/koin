@@ -17,7 +17,7 @@ package org.koin.core
 
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.ParametersDefinition
-import org.koin.core.scope.ScopeInstance
+import org.koin.core.qualifier.Qualifier
 
 /**
  * KoinComponent interface marker to bring Koin extensions features
@@ -29,31 +29,36 @@ interface KoinComponent {
     /**
      * Get the associated Koin instance
      */
-    fun getKoin() = GlobalContext.get().koin
+    fun getKoin(): Koin = GlobalContext.get().koin
 }
 
 /**
  * Get instance instance from Koin
- * @param name
- * @param scope
+ * @param qualifier
  * @param parameters
  */
 inline fun <reified T> KoinComponent.get(
-    name: String? = null,
-    scope: ScopeInstance? = null,
-    noinline parameters: ParametersDefinition? = null
+        qualifier: Qualifier? = null,
+        noinline parameters: ParametersDefinition? = null
 ): T =
-    getKoin().get(name, scope, parameters)
+        getKoin().get(qualifier, parameters)
 
 /**
  * Lazy inject instance from Koin
- * @param name
- * @param scope
+ * @param qualifier
  * @param parameters
  */
 inline fun <reified T> KoinComponent.inject(
-    name: String? = null,
-    scope: ScopeInstance? = null,
-    noinline parameters: ParametersDefinition? = null
+        qualifier: Qualifier? = null,
+        noinline parameters: ParametersDefinition? = null
 ): Lazy<T> =
-    getKoin().inject(name, scope, parameters)
+        getKoin().inject(qualifier, parameters)
+
+/**
+ * Get instance instance from Koin by Primary Type P, as secondary type S
+ * @param parameters
+ */
+inline fun <reified S, reified P> KoinComponent.bind(
+        noinline parameters: ParametersDefinition? = null
+): S =
+        getKoin().bind<S, P>(parameters)

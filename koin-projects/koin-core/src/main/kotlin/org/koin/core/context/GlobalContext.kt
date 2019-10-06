@@ -51,9 +51,6 @@ object GlobalContext {
             throw KoinAppAlreadyStartedException("A Koin Application has already been started")
         }
         app = koinApplication
-        app?.apply {
-            createEagerInstances()
-        }
     }
 
     /**
@@ -69,18 +66,11 @@ object GlobalContext {
 /**
  * Start a Koin Application as StandAlone
  */
-fun startKoin(koinApplication: KoinApplication): KoinApplication {
-    GlobalContext.start(koinApplication)
-    return koinApplication
-}
-
-/**
- * Start a Koin Application as StandAlone
- */
 fun startKoin(appDeclaration: KoinAppDeclaration): KoinApplication {
     val koinApplication = KoinApplication.create()
-    koinApplication.apply(appDeclaration)
     GlobalContext.start(koinApplication)
+    appDeclaration(koinApplication)
+    koinApplication.createEagerInstances()
     return koinApplication
 }
 
@@ -90,8 +80,27 @@ fun startKoin(appDeclaration: KoinAppDeclaration): KoinApplication {
 fun stopKoin() = GlobalContext.stop()
 
 /**
- * load Koin modules into current StandAlone Koin application
+ * load Koin modules in global Koin context
  */
-fun loadKoinModules(vararg modules: Module) {
-    GlobalContext.get().modules(*modules)
+fun loadKoinModules(module: Module) {
+    GlobalContext.get().modules(listOf(module))
+}
+
+
+fun loadKoinModules(modules: List<Module>) {
+    GlobalContext.get().modules(modules)
+}
+
+/**
+ * unload Koin modules from global Koin context
+ */
+fun unloadKoinModules(module: Module) {
+    GlobalContext.get().unloadModules(listOf(module))
+}
+
+/**
+ * unload Koin modules from global Koin context
+ */
+fun unloadKoinModules(modules: List<Module>) {
+    GlobalContext.get().unloadModules(modules)
 }

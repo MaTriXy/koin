@@ -5,15 +5,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import org.koin.Simple
-import org.koin.core.error.BadScopeInstanceException
+import org.koin.core.error.NoBeanDefFoundException
+import org.koin.core.qualifier.named
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 class OpenCloseScopeInstanceTest {
 
+    val scopeName = named("MY_SCOPE")
+
     @Test
     fun `get definition from a scope`() {
-        val scopeName = "MY_SCOPE"
         val koin = koinApplication {
             modules(
                     module {
@@ -29,8 +31,7 @@ class OpenCloseScopeInstanceTest {
     }
 
     @Test
-    fun `can't get definition from a opened scope`() {
-        val scopeName = "MY_SCOPE"
+    fun `can't get definition from another scope`() {
         val koin = koinApplication {
             modules(
                     module {
@@ -41,23 +42,22 @@ class OpenCloseScopeInstanceTest {
             )
         }.koin
 
-        val scope = koin.createScope("myScope")
         try {
+            val scope = koin.createScope("myScope", named("otherName"))
             scope.get<Simple.ComponentA>()
             fail()
-        } catch (e: BadScopeInstanceException) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     @Test
     fun `get definition from scope and out of scope`() {
-        val scopeName = "MY_SCOPE"
         val koin = koinApplication {
             modules(
                     module {
-                        scoped { Simple.ComponentA() }
                         scope(scopeName) {
+                            scoped { Simple.ComponentA() }
                             scoped { Simple.ComponentB(get()) }
                         }
                     }
@@ -73,24 +73,24 @@ class OpenCloseScopeInstanceTest {
 
     @Test
     fun `can't get definition from wrong scope`() {
-        val scope1_name = "SCOPE_1"
+        val scope1Name = named("SCOPE_1")
         val koin = koinApplication {
             modules(
                     module {
-                        scope(scope1_name) {
+                        scope(scope1Name) {
                         }
-                        scope("SCOPE_2") {
+                        scope(named("SCOPE_2")) {
                             scoped { Simple.ComponentA() }
                         }
                     }
             )
         }.koin
 
-        val scope = koin.createScope("myScope", scope1_name)
+        val scope = koin.createScope("myScope", scope1Name)
         try {
             scope.get<Simple.ComponentA>()
             fail()
-        } catch (e: BadScopeInstanceException) {
+        } catch (e: NoBeanDefFoundException) {
             e.printStackTrace()
         }
     }

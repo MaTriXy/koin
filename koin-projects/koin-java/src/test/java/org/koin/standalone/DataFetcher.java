@@ -15,9 +15,12 @@
  */
 package org.koin.standalone;
 
-import kotlin.Lazy;
 import org.koin.core.parameter.DefinitionParameters;
 import org.koin.java.KoinJavaComponent;
+
+import kotlin.Lazy;
+
+import static org.koin.core.qualifier.QualifierKt.named;
 
 /**
  * @author @fredy-mederos
@@ -29,9 +32,9 @@ public class DataFetcher {
     private String SEPARATOR = KoinJavaComponent.getKoin().getProperty("SeparatorProp");
 
     //From components
-    private Lazy<DataSource> localDb_lazy = KoinJavaComponent.inject(DataSource.class, "db");
-    private DataSource remoteApi = KoinJavaComponent.get(DataSource.class, "api");
-    private DataConverter dataConverter = KoinJavaComponent.get(DataConverter.class, null, null, () -> new DefinitionParameters(SEPARATOR));
+    private Lazy<DataSource> localDb_lazy = KoinJavaComponent.inject(DataSource.class, named("db"));
+    private DataSource remoteApi = KoinJavaComponent.get(DataSource.class, named("api"));
+    private DataConverter dataConverter = KoinJavaComponent.get(DataConverter.class, null,() -> new DefinitionParameters(SEPARATOR));
 
     public DataFetcher() {
         //Use this constructor only for test cases.

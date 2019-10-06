@@ -16,20 +16,13 @@
 package org.koin.core
 
 import org.koin.core.KoinApplication.Companion.logger
-import org.koin.core.definition.BeanDefinition
-import org.koin.core.definition.DefaultContext
-import org.koin.core.error.BadScopeInstanceException
-import org.koin.core.error.NoBeanDefFoundException
-import org.koin.core.instance.InstanceContext
 import org.koin.core.logger.Level
 import org.koin.core.parameter.ParametersDefinition
-import org.koin.core.registry.BeanRegistry
+import org.koin.core.qualifier.Qualifier
 import org.koin.core.registry.PropertyRegistry
 import org.koin.core.registry.ScopeRegistry
-import org.koin.core.scope.ScopeInstance
-import org.koin.core.scope.getScopeName
-import org.koin.core.time.measureDuration
-import org.koin.ext.getFullName
+import org.koin.core.scope.Scope
+import org.koin.core.scope.ScopeID
 import kotlin.reflect.KClass
 
 /**
@@ -40,167 +33,179 @@ import kotlin.reflect.KClass
  * @author Arnaud Giuliani
  */
 class Koin {
-    val beanRegistry = BeanRegistry()
     val scopeRegistry = ScopeRegistry()
     val propertyRegistry = PropertyRegistry()
-    val defaultContext = DefaultContext(this)
+    val rootScope = Scope("-Root-", isRoot = true, _koin = this)
 
     /**
      * Lazy inject a Koin instance
-     * @param name
+     * @param qualifier
      * @param scope
      * @param parameters
+     *
+     * @return Lazy instance of type T
      */
+    @JvmOverloads
     inline fun <reified T> inject(
-            name: String? = null,
-            scope: ScopeInstance? = null,
+            qualifier: Qualifier? = null,
             noinline parameters: ParametersDefinition? = null
-    ): Lazy<T> =
-            lazy { get<T>(name, scope, parameters) }
+    ): Lazy<T> = rootScope.inject(qualifier, parameters)
+
+    /**
+     * Lazy inject a Koin instance if available
+     * @param qualifier
+     * @param scope
+     * @param parameters
+     *
+     * @return Lazy instance of type T or null
+     */
+    @JvmOverloads
+    inline fun <reified T> injectOrNull(
+            qualifier: Qualifier? = null,
+            noinline parameters: ParametersDefinition? = null
+    ): Lazy<T?> = rootScope.injectOrNull(qualifier, parameters)
 
     /**
      * Get a Koin instance
-     * @param name
+     * @param qualifier
      * @param scope
      * @param parameters
      */
+    @JvmOverloads
     inline fun <reified T> get(
-            name: String? = null,
-            scope: ScopeInstance? = null,
+            qualifier: Qualifier? = null,
             noinline parameters: ParametersDefinition? = null
-    ): T {
-        return get(T::class, name, scope, parameters)
-    }
+    ): T = rootScope.get(qualifier, parameters)
+
+    /**
+     * Get a Koin instance if available
+     * @param qualifier
+     * @param scope
+     * @param parameters
+     *
+     * @return instance of type T or null
+     */
+    @JvmOverloads
+    inline fun <reified T> getOrNull(
+            qualifier: Qualifier? = null,
+            noinline parameters: ParametersDefinition? = null
+    ): T? = rootScope.getOrNull(qualifier, parameters)
 
     /**
      * Get a Koin instance
      * @param clazz
-     * @param name
+     * @param qualifier
      * @param scope
      * @param parameters
+     *
+     * @return instance of type T
      */
     fun <T> get(
             clazz: KClass<*>,
-            name: String?,
-            scope: ScopeInstance?,
+            qualifier: Qualifier?,
             parameters: ParametersDefinition?
-    ): T = synchronized(this) {
-        return if (logger.level == Level.DEBUG) {
-            logger.debug("+- get '${clazz.getFullName()}'")
-            val (instance: T, duration: Double) = measureDuration {
-                resolve<T>(name, clazz, scope, parameters)
-            }
-            logger.debug("+- got '${clazz.getFullName()}' in $duration ms")
-            return instance
-        } else {
-            resolve(name, clazz, scope, parameters)
-        }
+    ): T = rootScope.get(clazz, qualifier, parameters)
+
+
+    /**
+     * Declare a component definition from the given instance
+     * This result of declaring a single definition of type T, returning the given instance
+     *
+     * @param instance The instance you're declaring.
+     * @param qualifier Qualifier for this declaration
+     * @param secondaryTypes List of secondary bound types
+     * @param override Allows to override a previous declaration of the same type (default to false).
+     */
+    inline fun <reified T> declare(
+            instance: T,
+            qualifier: Qualifier? = null,
+            secondaryTypes: List<KClass<*>>? = null,
+            override: Boolean = false
+    ) {
+        rootScope.declare(instance, qualifier, secondaryTypes, override)
     }
 
-    private fun <T> resolve(
-            name: String?,
-            clazz: KClass<*>,
-            scope: ScopeInstance?,
-            parameters: ParametersDefinition?
-    ): T {
-        val (definition, targetScopeInstance) = prepareResolution(name, clazz, scope)
-        val instanceContext = InstanceContext(this, targetScopeInstance, parameters)
-        return definition.resolveInstance(instanceContext)
-    }
+    /**
+     * Get a all instance for given inferred class (in primary or secondary type)
+     *
+     * @return list of instances of type T
+     */
+    inline fun <reified T> getAll(): List<T> = rootScope.getAll()
 
-    private fun prepareResolution(
-            name: String?,
-            clazz: KClass<*>,
-            scope: ScopeInstance?
-    ): Pair<BeanDefinition<*>, ScopeInstance?> {
-        val definition = beanRegistry.findDefinition(name, clazz)
-                ?: throw NoBeanDefFoundException("No definition found for '${clazz.getFullName()}' has been found. Check your module definitions.")
+    /**
+     * Get instance of primary type P and secondary type S
+     * (not for scoped instances)
+     *
+     * @return instance of type S
+     */
+    inline fun <reified S, reified P> bind(noinline parameters: ParametersDefinition? = null): S =
+            rootScope.bind<S, P>(parameters)
 
-        if (definition.isScoped() && scope != null) {
-            checkScopeResolution(definition, scope)
-        }
+    /**
+     * Get instance of primary type P and secondary type S
+     * (not for scoped instances)
+     *
+     * @return instance of type S
+     */
+    fun <S> bind(
+            primaryType: KClass<*>,
+            secondaryType: KClass<*>,
+            parameters: ParametersDefinition? = null
+    ): S = rootScope.bind(primaryType, secondaryType, parameters)
 
-        return Pair(definition, scope)
-    }
-
-    private fun checkScopeResolution(definition: BeanDefinition<*>, scope: ScopeInstance) {
-        val scopeInstanceName = scope.definition?.scopeName
-        val beanScopeName = definition.getScopeName()
-        if (beanScopeName != scopeInstanceName) {
-            when {
-                scopeInstanceName == null -> throw BadScopeInstanceException("Can't use definition $definition defined for scope '$beanScopeName', with an open scope instance $scope. Use a scope instance with scope '$beanScopeName'")
-                beanScopeName != null -> throw BadScopeInstanceException("Can't use definition $definition defined for scope '$beanScopeName' with scope instance $scope. Use a scope instance with scope '$beanScopeName'.")
-            }
-        }
-    }
-
-    internal fun createEagerInstances() {
-        val definitions = beanRegistry.findAllCreatedAtStartDefinition()
-        if (definitions.isNotEmpty()) {
-            definitions.forEach {
-                it.resolveInstance(InstanceContext(koin = this))
-            }
-        }
-    }
+    internal fun createEagerInstances() = rootScope.createEagerInstances()
 
     /**
      * Create a Scope instance
      * @param scopeId
-     * @param scopeName
+     * @param scopeDefinitionName
      */
-    fun createScope(scopeId: String, scopeName: String? = null): ScopeInstance {
-        val createdScopeInstance = scopeRegistry.createScopeInstance(scopeId, scopeName)
-        createdScopeInstance.register(this)
-        return createdScopeInstance
-    }
-
-    /**
-     * Create a Scope instance
-     * @param scopeId
-     * @param scopeName
-     */
-    inline fun <reified T> createScopeWithType(scopeId: String): ScopeInstance {
-        val scopeName = T::class.getFullName()
-        val createdScopeInstance = scopeRegistry.createScopeInstance(scopeId, scopeName)
-        createdScopeInstance.register(this)
-        return createdScopeInstance
+    fun createScope(scopeId: ScopeID, qualifier: Qualifier): Scope {
+        if (logger.isAt(Level.DEBUG)) {
+            logger.debug("!- create scope - id:$scopeId q:$qualifier")
+        }
+        return scopeRegistry.createScopeInstance(this, scopeId, qualifier)
     }
 
     /**
      * Get or Create a Scope instance
      * @param scopeId
-     * @param scopeName
+     * @param qualifier
      */
-    fun getOrCreateScope(scopeId: String, scopeName: String? = null): ScopeInstance {
-        return scopeRegistry.getScopeInstanceOrNull(scopeId) ?: createScope(scopeId, scopeName)
-    }
-
-    /**
-     * Get or Create a Scope instance from type name
-     * @param scopeId
-     */
-    inline fun <reified T> getOrCreateScopeWithType(scopeId: String): ScopeInstance {
-        val scopeName = T::class.getFullName()
-        return scopeRegistry.getScopeInstanceOrNull(scopeId) ?: createScope(scopeId, scopeName)
+    fun getOrCreateScope(scopeId: ScopeID, qualifier: Qualifier): Scope {
+        return scopeRegistry.getScopeInstanceOrNull(scopeId) ?: createScope(scopeId, qualifier)
     }
 
     /**
      * get a scope instance
      * @param scopeId
      */
-    fun getScope(scopeId: String): ScopeInstance {
-        val scope = scopeRegistry.getScopeInstance(scopeId)
-        if (!scope.isRegistered()) {
-            error("ScopeInstance $scopeId is not registered")
-        }
-        return scope
+    fun getScope(scopeId: ScopeID): Scope {
+        return scopeRegistry.getScopeInstance(scopeId)
+    }
+
+    /**
+     * get a scope instance
+     * @param scopeId
+     */
+    fun getScopeOrNull(scopeId: ScopeID): Scope? {
+        return scopeRegistry.getScopeInstanceOrNull(scopeId)
     }
 
     /**
      * Delete a scope instance
      */
-    fun deleteScope(scopeId: String) {
+    fun deleteScope(scopeId: ScopeID) {
         scopeRegistry.deleteScopeInstance(scopeId)
+    }
+
+    /**
+     * Retrieve a property
+     * @param key
+     * @param defaultValue
+     */
+    fun <T> getProperty(key: String, defaultValue: T): T {
+        return propertyRegistry.getProperty<T>(key) ?: defaultValue
     }
 
     /**
@@ -208,7 +213,7 @@ class Koin {
      * @param key
      */
     fun <T> getProperty(key: String): T? {
-        return propertyRegistry.getProperty<T>(key)
+        return propertyRegistry.getProperty(key)
     }
 
     /**
@@ -225,7 +230,7 @@ class Koin {
      */
     fun close() {
         scopeRegistry.close()
-        beanRegistry.close()
+        rootScope.close()
         propertyRegistry.close()
     }
 }

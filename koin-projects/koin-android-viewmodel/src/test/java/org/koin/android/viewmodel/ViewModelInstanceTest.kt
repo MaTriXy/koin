@@ -14,7 +14,7 @@ class ViewModelInstanceTest {
     @Test
     fun `should have a factory instance for ViewModel`() {
         val koinApp = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 viewModel { MyViewModel() }
             })
@@ -26,6 +26,6 @@ class ViewModelInstanceTest {
         assertNotEquals(instance1, instance2)
 
         val definition = koinApp.getDefinition(MyViewModel::class)!!
-        assertTrue(!definition.instance.isCreated(InstanceContext(koin = koin)))
+        assertTrue(!definition.instance!!.isCreated(InstanceContext(koin = koin)))
     }
 }

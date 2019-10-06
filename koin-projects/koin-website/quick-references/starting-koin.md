@@ -27,7 +27,7 @@ fun main(vararg args: String) {
         // enable Printlogger with default Level.INFO
         // can have Level & implementation
         // equivalent to logger(Level.INFO, PrintLogger())
-        logger() 
+        printlogger() 
 
         // declare properties from given map
         properties( /* properties map */)
@@ -40,7 +40,7 @@ fun main(vararg args: String) {
 
         // list all used modules
         // as list or vararg
-        modules(moduleList) 
+        modules(myModules) 
     }
 }
 {% endhighlight %}
@@ -66,7 +66,7 @@ class MainApplication : Application() {
             androidFileProperties()
 
             // module list
-            modules(offlineWeatherApp)
+            modules(myModules)
         }
     }
 }
@@ -83,12 +83,12 @@ Starting Koin from your `Application` extension function:
 {% highlight kotlin %}
 fun Application.main() {
     // Install Ktor features
-    installKoin {
+    install(Koin) {
         // Use SLF4J Koin Logger at Level.INFO
         slf4jLogger()
 
         // declare used modules
-        modules(helloAppModule)
+        modules(myModules)
     }
 }
 {% endhighlight %}

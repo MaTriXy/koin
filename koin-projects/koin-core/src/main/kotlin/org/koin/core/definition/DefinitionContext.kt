@@ -1,55 +1,62 @@
-package org.koin.core.definition
-
-import org.koin.core.Koin
-import org.koin.core.error.MissingPropertyException
-import org.koin.core.parameter.ParametersDefinition
-import org.koin.core.scope.ScopeInstance
-
-sealed class DefinitionContext(val koin: Koin) {
-
-    abstract fun getCurrentScope(): ScopeInstance?
-
-    /**
-     * Resolve an instance from Koin
-     * @param name
-     * @param scope
-     * @param parameters
-     */
-    inline fun <reified T> get(
-            name: String? = null,
-            noinline parameters: ParametersDefinition? = null
-    ): T {
-        return koin.get(name, getCurrentScope(), parameters)
-    }
-
-    /**
-     * Resolve an instance from Koin / extenral scope instance
-     * @param name
-     * @param scope
-     * @param parameters
-     */
-    inline fun <reified T> get(
-            name: String? = null,
-            scope: ScopeInstance,
-            noinline parameters: ParametersDefinition? = null
-    ): T {
-        return koin.get(name, scope, parameters)
-    }
-
-    /**
-     * Get a property from Koin
-     * @param key
-     */
-    fun <T> getProperty(key: String): T {
-        return koin.getProperty(key)
-                ?: throw MissingPropertyException("Property '$key' is missing")
-    }
-}
-
-class DefaultContext(koin: Koin) : DefinitionContext(koin) {
-    override fun getCurrentScope(): ScopeInstance? = null
-}
-
-class ScopedContext(koin: Koin, val scopeInstance: ScopeInstance) : DefinitionContext(koin) {
-    override fun getCurrentScope(): ScopeInstance? = scopeInstance
-}
+// package org.koin.core.definition
+//
+// import org.koin.core.Koin
+// import org.koin.core.error.MissingPropertyException
+// import org.koin.core.parameter.ParametersDefinition
+// import org.koin.core.qualifier.Qualifier
+// import org.koin.core.scope.Scope
+//
+// class DefinitionContext(val koin: Koin, val scope: Scope = Scope.GLOBAL) {
+//
+//    /**
+//     * Get the current Scope
+//     */
+//    fun currentScope(): Scope = scope
+//
+//    /**
+//     * Resolve an instance from Koin
+//     * @param qualifier
+//     * @param parameters
+//     */
+//    inline fun <reified T> get(
+//        qualifier: Qualifier? = null,
+//        noinline parameters: ParametersDefinition? = null
+//    ): T {
+//        return koin.get(qualifier, currentScope(), parameters)
+//    }
+//
+//    /**
+//     * Resolve an instance from Koin / extenral scope instance
+//     * @param qualifier
+//     * @param scope
+//     * @param parameters
+//     */
+//    inline fun <reified T> get(
+//        qualifier: Qualifier? = null,
+//        scope: Scope,
+//        noinline parameters: ParametersDefinition? = null
+//    ): T {
+//        return koin.get(qualifier, scope, parameters)
+//    }
+//
+//    /**
+//     * Retrieve from SCope
+//     */
+//    inline fun <reified T> getFromScope(
+//        scopeId: String,
+//        qualifier: Qualifier? = null,
+//        noinline parameters: ParametersDefinition? = null
+//    ): T {
+//        return koin.get(qualifier, koin.getScope(scopeId), parameters)
+//    }
+//
+//    /**
+//     * Get a property from Koin
+//     * @param key
+//     * @param defaultValue
+//     */
+//    fun <T> getProperty(key: String, defaultValue: T? = null): T {
+//        return koin.getProperty(key, defaultValue)
+//                ?: throw MissingPropertyException("Property '$key' is missing")
+//    }
+// }

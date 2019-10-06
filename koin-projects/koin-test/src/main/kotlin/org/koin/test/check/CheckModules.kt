@@ -17,70 +17,46 @@ package org.koin.test.check
 
 import org.koin.core.Koin
 import org.koin.core.KoinApplication
-import org.koin.core.definition.BeanDefinition
-import org.koin.core.parameter.emptyParametersHolder
-import org.koin.core.scope.getScopeName
+import org.koin.core.parameter.parametersOf
 
 /**
- * Check all definition's dependencies - run all modules in a test sandbox
- * and checkModules if definitions can run
+ * Check all definition's dependencies - start all modules and check if definitions can run
  */
-fun KoinApplication.checkModules() = koin.checkModules()
+fun KoinApplication.checkModules(parameters: CheckParameters? = null) = koin.checkModules(parameters)
 
 /**
- * Check all definition's dependencies - run all modules in a test sandbox
- * and checkModules if definitions can run
+ * Check all definition's dependencies - start all modules and check if definitions can run
  */
-fun Koin.checkModules() {
-    val allDefinitions = getSandboxedDefinitions()
+fun Koin.checkModules(parametersDefinition: CheckParameters? = null) {
+    val bindings = ParametersBinding()
+    bindings.koin = this
+    parametersDefinition?.let {
+        bindings.parametersDefinition()
+    }
+    val allParameters = bindings.creators
 
-    registerDefinitions(allDefinitions)
+    checkMainDefinitions(allParameters)
 
-    runDefinitions(allDefinitions)
+    checkScopedDefinitions(allParameters)
 
     close()
 }
 
-/**
- * Resolve & instance definitions
- */
-fun Koin.runDefinitions(allDefinitions: List<BeanDefinition<*>>) {
-    allDefinitions.forEach {
-        val clazz = it.primaryType
-        val scope = if (it.isScoped()) scopeRegistry.createScopeInstance(
-                "sandbox_scope", it.getScopeName()
-        ) else null
-
-        get<Any>(clazz, it.name, scope) { emptyParametersHolder() }
-        scope?.let { scope.close() }
+private fun Koin.checkScopedDefinitions(allParameters: MutableMap<CheckedComponent, ParametersCreator>) {
+    scopeRegistry.getScopeSets().forEach { set ->
+        val scope = createScope(set.qualifier.toString(), set.qualifier)
+        set.definitions.forEach {
+            val parameters = allParameters[CheckedComponent(it.qualifier, it.primaryType)]?.invoke(it.qualifier)
+                    ?: parametersOf()
+            scope.get<Any>(it.primaryType, it.qualifier) { parameters }
+        }
     }
 }
 
-private fun Koin.registerDefinitions(allDefinitions: List<BeanDefinition<*>>) {
-    allDefinitions.forEach {
-        beanRegistry.saveDefinition(it)
+private fun Koin.checkMainDefinitions(allParameters: MutableMap<CheckedComponent, ParametersCreator>) {
+    rootScope.beanRegistry.getAllDefinitions().forEach {
+        val parameters = allParameters[CheckedComponent(it.qualifier, it.primaryType)]?.invoke(it.qualifier)
+                ?: parametersOf()
+        get<Any>(it.primaryType, it.qualifier) { parameters }
     }
-}
-
-private fun Koin.getSandboxedDefinitions(): List<BeanDefinition<*>> {
-    return beanRegistry.getAllDefinitions()
-            .map {
-                KoinApplication.logger.debug("* sandbox for $it")
-                it.cloneForSandbox() as BeanDefinition<*>
-            }
-}
-
-/**
- * Clone definition and inject SandBox instance holder
- */
-fun <T> BeanDefinition<T>.cloneForSandbox(): BeanDefinition<T> {
-    val copy = this.copy()
-    copy.secondaryTypes = this.secondaryTypes
-    copy.instance = SandboxInstance(copy)
-    copy.definition = definition
-    copy.attributes = this.attributes.copy()
-    copy.options = this.options.copy()
-    copy.options.override = true
-    copy.kind = this.kind
-    return copy
 }

@@ -18,7 +18,7 @@ import static org.koin.core.context.GlobalContext.start;
 // Build KoinApplication instance
 // Builder API style
 KoinApplication koinApp = KoinApplication.create()
-                .logger()
+                .printLogger()
                 .modules(koinModule);
 
 // Statr KoinApplication instance
@@ -58,6 +58,3 @@ import static org.koin.java.standalone.KoinJavaComponent.*;
 ComponentA a = get(ComponentA.class);
 Lazy<ComponentA> lazy_a = inject(ComponentA.class);
 {% endhighlight %}
-
-## More about Java features
-

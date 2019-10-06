@@ -10,20 +10,20 @@ class InstanceBuilderTest {
 
     class MyComponent
 
-    @Test
-    fun `should create an instance for class`() {
-        val (ctor, ctorDuration) = measureDuration {
-            MyComponent::class.getFirstJavaConstructor()
-        }
-        println("got ctor in $ctorDuration ms")
-
-        val (instance, instanceDuration) = measureDuration {
-            ctor.makeInstance<MyComponent>(emptyArray())
-        }
-        assertNotNull(instance)
-
-        println("instance created in $instanceDuration ms")
-    }
+//    @Test
+//    fun `should create an instance for class`() {
+//        val (ctor, ctorDuration) = measureDuration {
+//            MyComponent::class.getFirstJavaConstructor()
+//        }
+//        println("got ctor in $ctorDuration ms")
+//
+//        val (instance, instanceDuration) = measureDuration {
+//            ctor.makeInstance<MyComponent>(emptyArray())
+//        }
+//        assertNotNull(instance)
+//
+//        println("instance created in $instanceDuration ms")
+//    }
 
     @Test
     fun `should create an instance for kclass`() {
@@ -33,7 +33,7 @@ class InstanceBuilderTest {
         println("got ctor in $ctorDuration ms")
 
         val (instance, instanceDuration) = measureDuration {
-            ctor.call(*emptyArray()) as MyComponent
+            ctor.call() as MyComponent
         }
         assertNotNull(instance)
 

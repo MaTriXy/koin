@@ -17,33 +17,33 @@ class DefinitionCreatedAtStartTest {
     @Test
     fun `is declared as created at start`() {
         val app = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(
-                module {
-                    single(createdAtStart = true) { Simple.ComponentA() }
-                }
+                    module {
+                        single(createdAtStart = true) { Simple.ComponentA() }
+                    }
             )
         }
 
         val defA = app.getDefinition(Simple.ComponentA::class) ?: error("no definition found")
         assertTrue(defA.options.isCreatedAtStart)
-        assertFalse(defA.instance.isCreated(InstanceContext()))
+        assertFalse(defA.instance!!.isCreated(InstanceContext()))
     }
 
     @Test
     fun `is created at start`() {
         val app = startKoin {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(
-                module {
-                    single(createdAtStart = true) { Simple.ComponentA() }
-                }
+                    module {
+                        single(createdAtStart = true) { Simple.ComponentA() }
+                    }
             )
         }
 
         val defA = app.getDefinition(Simple.ComponentA::class) ?: error("no definition found")
         assertTrue(defA.options.isCreatedAtStart)
-        assertTrue(defA.instance.isCreated(InstanceContext()))
+        assertTrue(defA.instance!!.isCreated(InstanceContext()))
         stopKoin()
     }
 
@@ -51,15 +51,15 @@ class DefinitionCreatedAtStartTest {
     fun `factory is not created at start`() {
         val app = koinApplication {
             modules(
-                module {
-                    factory { Simple.ComponentA() }
-                }
+                    module {
+                        factory { Simple.ComponentA() }
+                    }
             )
         }
 
         val defA = app.getDefinition(Simple.ComponentA::class) ?: error("no definition found")
         assertFalse(defA.options.isCreatedAtStart)
-        assertFalse(defA.instance.isCreated(InstanceContext()))
+        assertFalse(defA.instance!!.isCreated(InstanceContext()))
         app.close()
     }
 }

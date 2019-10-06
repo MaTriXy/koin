@@ -17,7 +17,7 @@ class ViewModelDSLTest {
     @Test
     fun `definition should be a viewmodel`() {
         val koinApp = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 viewModel { MyViewModel() }
             })
@@ -25,13 +25,13 @@ class ViewModelDSLTest {
 
         val viemodelDefinition = koinApp.getDefinition(MyViewModel::class)!!
         assertTrue(viemodelDefinition.isViewModel())
-        assertTrue(viemodelDefinition.isKind(Kind.Factory))
+        assertTrue(viemodelDefinition.kind == Kind.Factory)
     }
 
     @Test
     fun `definition should not be a viewmodel`() {
         val koinApp = koinApplication {
-            logger(Level.DEBUG)
+            printLogger(Level.DEBUG)
             modules(module {
                 single { MyComponent() }
             })
@@ -47,5 +47,5 @@ class ViewModelDSLTest {
  * @param clazz
  */
 fun KoinApplication.getDefinition(clazz: KClass<*>): BeanDefinition<*>? {
-    return this.koin.beanRegistry.getDefinition(clazz)
+    return this.koin.rootScope.beanRegistry.getDefinition(clazz)
 }

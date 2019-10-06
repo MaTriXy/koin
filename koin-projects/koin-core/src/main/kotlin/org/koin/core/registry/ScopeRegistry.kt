@@ -15,12 +15,18 @@
  */
 package org.koin.core.registry
 
+import org.koin.core.Koin
+import org.koin.core.KoinApplication
 import org.koin.core.error.NoScopeDefinitionFoundException
 import org.koin.core.error.ScopeAlreadyCreatedException
 import org.koin.core.error.ScopeNotCreatedException
+import org.koin.core.logger.Level
 import org.koin.core.module.Module
+import org.koin.core.qualifier.Qualifier
+import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeDefinition
-import org.koin.core.scope.ScopeInstance
+import org.koin.core.scope.ScopeID
+import org.koin.dsl.ScopeSet
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -31,8 +37,13 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class ScopeRegistry {
 
-    private val definitions = ConcurrentHashMap<String, ScopeDefinition>()
-    private val instances = ConcurrentHashMap<String, ScopeInstance>()
+    internal val definitions = ConcurrentHashMap<String, ScopeDefinition>()
+    private val instances = ConcurrentHashMap<String, Scope>()
+
+    /**
+     * return all ScopeSet
+     */
+    fun getScopeSets() = definitions.values
 
     internal fun loadScopes(modules: Iterable<Module>) {
         modules.forEach {
@@ -40,12 +51,53 @@ class ScopeRegistry {
         }
     }
 
+    internal fun unloadScopedDefinitions(modules: Iterable<Module>) {
+        modules.forEach {
+            unloadScopes(it)
+        }
+    }
+
+    private fun unloadScopes(module: Module) {
+        module.scopes.forEach {
+            unloadDefinition(it)
+        }
+    }
+
+    fun loadDefaultScopes(koin: Koin) {
+        saveInstance(koin.rootScope)
+    }
+
     private fun declareScopes(module: Module) {
         module.scopes.forEach {
-            if (definitions[it.scopeName] != null) {
+            saveDefinition(it)
+        }
+    }
 
+    private fun unloadDefinition(scopeSet: ScopeSet) {
+        val key = scopeSet.qualifier.toString()
+        definitions[key]?.let { scopeDefinition ->
+            if (KoinApplication.logger.isAt(Level.DEBUG)) {
+                KoinApplication.logger.info("unbind scoped definitions: ${scopeSet.definitions} from '${scopeSet.qualifier}'")
             }
-            definitions[it.scopeName] = it
+            closeRelatedScopes(scopeDefinition)
+            scopeDefinition.definitions.removeAll(scopeSet.definitions)
+        }
+    }
+
+    private fun closeRelatedScopes(originalSet: ScopeDefinition) {
+        instances.values.forEach { scope ->
+            if (scope.scopeDefinition == originalSet) {
+                scope.close()
+            }
+        }
+    }
+
+    private fun saveDefinition(scopeSet: ScopeSet) {
+        val foundScopeSet: ScopeDefinition? = definitions[scopeSet.qualifier.toString()]
+        if (foundScopeSet == null) {
+            definitions[scopeSet.qualifier.toString()] = scopeSet.createDefinition()
+        } else {
+            foundScopeSet.definitions.addAll(scopeSet.definitions)
         }
     }
 
@@ -54,41 +106,45 @@ class ScopeRegistry {
     /**
      * Create a scope instance for given scope
      * @param id - scope instance id
-     * @param scopeName - scope name
+     * @param scopeName - scope qualifier
      */
-    fun createScopeInstance(id: String, scopeName: String? = null): ScopeInstance {
-        val definition: ScopeDefinition? = scopeName?.let {
-            definitions[scopeName]
-                    ?: throw NoScopeDefinitionFoundException("No scope definition found for scopeName '$scopeName'")
-        }
-        val instance = ScopeInstance(id, definition)
+    fun createScopeInstance(koin: Koin, id: ScopeID, scopeName: Qualifier): Scope {
+        val definition: ScopeDefinition = definitions[scopeName.toString()]
+                ?: throw NoScopeDefinitionFoundException("No scope definition found for scopeName '$scopeName'")
+        val instance = Scope(id, _koin = koin)
+        instance.scopeDefinition = definition
+        instance.declareDefinitionsFromScopeSet()
         registerScopeInstance(instance)
         return instance
     }
 
-    private fun registerScopeInstance(instance: ScopeInstance) {
+    private fun registerScopeInstance(instance: Scope) {
         if (instances[instance.id] != null) {
             throw ScopeAlreadyCreatedException("A scope with id '${instance.id}' already exists. Reuse or close it.")
         }
-        instances[instance.id] = instance
+        saveInstance(instance)
     }
 
-    fun getScopeInstance(id: String): ScopeInstance {
+    fun getScopeInstance(id: ScopeID): Scope {
         return instances[id]
                 ?: throw ScopeNotCreatedException("ScopeInstance with id '$id' not found. Create a scope instance with id '$id'")
     }
 
-    fun getScopeInstanceOrNull(id: String): ScopeInstance? {
+    private fun saveInstance(instance: Scope) {
+        instances[instance.id] = instance
+    }
+
+    fun getScopeInstanceOrNull(id: ScopeID): Scope? {
         return instances[id]
     }
 
-    fun deleteScopeInstance(id: String) {
+    fun deleteScopeInstance(id: ScopeID) {
         instances.remove(id)
     }
 
     fun close() {
-        definitions.clear()
         instances.values.forEach { it.close() }
+        definitions.clear()
         instances.clear()
     }
 }

@@ -1,12 +1,9 @@
 package org.koin.experimental.builder
 
 import org.junit.Assert
-import org.junit.Assert.fail
 import org.junit.Test
 import org.koin.core.context.startKoin
-import org.koin.core.error.ScopeNotCreatedException
 import org.koin.core.logger.Level
-import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.get
@@ -20,14 +17,14 @@ class ScopedMVPArchitectureTest : AutoCloseKoinTest() {
     }
 
     val DataSourceModule = module {
-        single<DebugDatasource>() bind Datasource::class
+        singleBy<Datasource, DebugDatasource>()
     }
 
     @Test
     fun `should create all MVP hierarchy`() {
         startKoin {
-            logger(Level.DEBUG)
-            modules(MVPModule, DataSourceModule)
+            printLogger(Level.DEBUG)
+            modules(MVPModule+ DataSourceModule)
         }
 
         val view = get<View>()
@@ -44,8 +41,8 @@ class ScopedMVPArchitectureTest : AutoCloseKoinTest() {
     @Test
     fun `check MVP hierarchy`() {
         startKoin {
-            logger(Level.DEBUG)
-            modules(MVPModule, DataSourceModule)
+            printLogger(Level.DEBUG)
+            modules(MVPModule+ DataSourceModule)
         }
     }
 }

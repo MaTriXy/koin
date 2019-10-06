@@ -2,6 +2,98 @@
 
 Badges: `[UPDATED]`, `[FIXED]`, `[ADDED]`, `[DEPRECATED]`, `[REMOVED]`,  `[BREAKING]`
 
+
+## [2.0.1]()
+
+_Android-ViewModel_
+
+* `[ADDED]` - debug logging for VM provider
+
+_AndroidX-ViewModel_
+
+* `[ADDED]` - debug logging for VM provider
+
+_Core_
+
+* `[FIXED]` - performances update - modules list loading & class naming
+* `[BREAKING]` - `modules(vararg modules: Module)` in `KoinApplication` has been removed for performance reasons. Please use `modules(modules: List<Module>)`
+* `[BREAKING]` - `modules(modules: Iterable<Module>)` in `KoinApplication` has been removed for performance reasons. Please use `modules(modules: List<Module>)`
+* `[BREAKING]` - `loadKoinModules(vararg modules: Module)` in `GlobalContext` has been removed for performance reasons. Please use `loadKoinModules(module: Module)` or `loadKoinModules(modules: List<Module>)`
+* `[BREAKING]` - `unloadKoinModules(vararg modules: Module)` in `GlobalContext` has been removed for performance reasons. Please use `unloadKoinModules(module: Module)`
+
+## [2.0.0]()
+
+_Android_
+
+* `[UPDATED]` - rework startking DSL to add extension in startKoin (`androidContext`, `androidLogger`)
+
+_Android-Scope_
+
+* `[UPDATED]` - rework according to new Scope API (manage compelte Scope Lifecycle)
+* `[ADDED]` - `currentScope` property scope tied to current Activity or Fragment
+* `[ADDED]` - `currentScope` is aware of any `KoinComponent` & currentScope override
+* `[UPDATED]` - ScopeID generation
+
+_Android-ViewModel_
+
+* `[ADDED]` - support for new Scope API
+* `[REMOVED]` - removed koin-ext builder API
+* `[UPDATED]` - make the API open to Koin instance isolation
+* `[FIXED]` - https://github.com/InsertKoinIO/koin/issues/452 - Named qualifier does not work with view models - Now take qualifier as ViewModel's Tag
+* `[FIXED]` - by viewModel & getViewModel with clazz version
+* `[FIXED]` - ViewModel definition in scope
+
+_AndroidX-Scope_
+
+* `[UPDATED]` - update API regarding the changes in `koin-android-scope`
+* `[UPDATED]` - ScopeID generation
+
+_AndroidX-ViewModel_
+
+* `[UPDATED]` - update API regarding the changes in `koin-android-viewmodel`
+* `[FIXED]` - https://github.com/InsertKoinIO/koin/issues/452 - Named qualifier does not work with view models - Now take qualifier as ViewModel's Tag
+* `[FIXED]` - by viewModel & getViewModel with clazz version
+* `[FIXED]` - ViewModel definition in scope
+
+_Core_
+
+* `[UPDATED]` - startKoin replaced with startKoin DSL and koin in global context
+* `[UPDATED]` - complete internals rewritten for performances optimisation (startup & injection)
+* `[UPDATED]` - `KoinComponent` now can override `getKoin()` to target a custom Koin instance & `currentScope()` to target a Scope that is used for all injections
+* `[ADDED]` - koinApplication function to help declare an instance  for a local context, in ordoer to help isolated Koin instances
+* `[UPDATED]` - rework Scope API (multiple instances definitions, properties, release, callback ...)
+* `[UPDATED]` - rework Scope DSL (scope/scoped) & lock single/factory
+* `[UPDATED]` - rework internals to use root Scope & separate Scope instances, with different bean registry
+* `[ADDED]` - onClose, onRelease DSL on single/factory/scoped to execute code when releasing instance or stopping container 
+* `[ADDED]` - getProperty with default value
+* `[UPDATED]` - Kotlin 1.3.21
+* `[ADDED]` - Qualifiers with `named()` function to replace old string names. Allow to use Types
+* `[ADDED]` - `getOrNull()` and `injectOrNull()` to safely resolve potential components and get null of not present
+* `[UPDATED]` - additional binding API, with `getAll<S>()` & `bind<P,S>()` operator to look for instances regarding secondary type definition
+* `[ADDED]` - `declare()` on Koin & Scope, to help declare an instance on the fly
+* `[FIXED]` - Factory declaration in scope
+
+_Test_
+
+* `[UPDATED]` - rework testing API, codebase detached from internal core tests
+* `[UPDATED]` - checkModules now rely on pure Kotlin & with `create` parameters DSL
+
+_Java_
+
+* `[UPDATED]` - updated `KoinJavaComponent` for the new API
+* `[FIXED]` - https://github.com/InsertKoinIO/koin/issues/451 - No longer possible to get objects from a scope in Java code - `scope` parameter to allow resolve a dependency from this scope instance
+* `[FIXED]` - Get access to scope instance
+
+_Ktor_
+
+* `[UPDATED]` - rework startking DSL to add extension in startKoin
+* `[ADDED]` - Koin as a Ktor feature
+
+_Spark_
+
+* `[REMOVED]` project non ported to Koin 2.0
+
+
 ## [1.0.2]()
 
 _Android_

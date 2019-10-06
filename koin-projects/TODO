@@ -1,5 +1,11 @@
-Restart problem / Ktor sample tests & Java restart
+-- [2.1] --
+* Fragment Manager -> injection by fragment
+* JUnit rule ~ AutoCloseKoinTest()
 
+-- TODO --
 
-Fragment Manager -> injection by fragment
+-- Doc --
+
+* blog post on medium
+
 

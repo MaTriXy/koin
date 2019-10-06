@@ -17,14 +17,6 @@ By default in Koin, we have 3 kind of scopes:
 - `factory` definition, create a new object each time. No persistence in the container (can't be shared).
 - `scoped` definition, create an object that persistent tied to the associated scope lifetime.
 
-To declare a scope definition, use the `scoped` function:
-
-{% highlight kotlin %}
-module {
-    scope { Presenter() }
-}
-{% endhighlight %}
-
 ### Declare and use a scope
 
 A scope is a logical unit of scoped definitions.
@@ -34,23 +26,17 @@ For the given classes:
 {% highlight kotlin %}
 class ComponentA
 class ComponentB(val a : class ComponentA)
-class ComponentC
 {% endhighlight %}
 
 We can write the following scope:
 
 {% highlight kotlin %}
 module {
-    
-    // define the scope "MY_SCOPE"
-    scope("MY_SCOPE") {
+    // define the scope with its qualifier "MY_SCOPE"
+    scope(named("MY_SCOPE") {
         scoped { ComponentA() }
         scoped { ComponentB(get()) }
     }
-
-    // scoped definition not tied to any scope
-    // can be injected in any scope instance
-    scoped { ComponentC() }
 }
 {% endhighlight %}
 
@@ -59,28 +45,26 @@ module {
 From any `Koin` instance or also available from your `KoinComponent` with `getKoin()`, the following functions allows to handle scope instances:
 
 {% highlight kotlin %}
-// create scope instance "myScope" for scope "MY_SCOPE"
-// you can create several scope isntances of the same scope definition
-val myScope : ScopeInstance = koin.createScope("myScope", "MY_SCOPE")
+// create scope instance with ScopeID "myScopeId" for scope named "MY_SCOPE"
+val myScope : Scope = koin.createScope("myScopeId", named("MY_SCOPE"))
 
 // get instance ComponentA from scope
 val a = myScope.get<ComponentA>()
 // get instance ComponentB from scope and retrieve instance ComponentA from same scope
 val b = myScope.get<ComponentB>()
 
-// can also get instance from a scoped component definition not tied to a scope definition
-val c = myScope.get<ComponentC>()
-
 // if you need, you can retrieve your scope instance by its id
-val myScope : ScopeInstance = koin.getScope("myScope")
+val myScope : Scope = koin.getScope("myScopeId")
 
 // close the scope when needed
 myScope.close()
 {% endhighlight %}
 
+## Scope vs Module unloading
 
-## More about
+Koin gives 2 possibilities to handle definitions & instances for a limited lifetime: Scope API & modules unload. What is the difference and when to use them?
 
-Below are some further readings:
+- `unloadKoinModules()` allows to drop modules definitions (and instances). it's very useful for dynamic module architecture approach, or when we need to load/unload/reload definitions.
+- Scope API is dedicated to limited lifetime definitions, creating bunch of definitions for a given lifetime/purpose
 
-
+Using modules unload is more simpler that wiring scopes, but you have to unload/reload modules definitions each time you need. Also one difference, definitions are no longer reachable. Scope API is more dedicated to fine grained lifetime limited instances, or multiple instance of the same scopes (sessions...).

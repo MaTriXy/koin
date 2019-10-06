@@ -1,42 +1,42 @@
 package org.koin.core.definition
 
-import org.koin.core.scope.setScopeName
+import org.koin.core.qualifier.Qualifier
 
 object DefinitionFactory {
 
     inline fun <reified T> createSingle(
-            name: String? = null,
+            qualifier: Qualifier? = null,
+            scopeName: Qualifier? = null,
             noinline definition: Definition<T>
     ): BeanDefinition<T> {
-        return createDefinition(name, definition)
+        return createDefinition(qualifier, definition, Kind.Single, scopeName)
     }
 
-    inline fun <reified T> createScope(
-            name: String? = null,
-            scopeName: String? = null,
+    inline fun <reified T> createScoped(
+            qualifier: Qualifier? = null,
+            scopeName: Qualifier? = null,
             noinline definition: Definition<T>
     ): BeanDefinition<T> {
-        val beanDefinition = createDefinition(name, definition, Kind.Scope)
-        scopeName?.let { beanDefinition.setScopeName(scopeName) }
-        return beanDefinition
+        return createDefinition(qualifier, definition, Kind.Scoped, scopeName)
     }
 
     inline fun <reified T> createFactory(
-            name: String? = null,
+            qualifier: Qualifier? = null,
+            scopeName: Qualifier? = null,
             noinline definition: Definition<T>
     ): BeanDefinition<T> {
-        return createDefinition(name, definition, Kind.Factory)
+        return createDefinition(qualifier, definition, Kind.Factory, scopeName)
     }
 
     inline fun <reified T> createDefinition(
-            name: String?,
+            qualifier: Qualifier?,
             noinline definition: Definition<T>,
-            kind: Kind = Kind.Single
+            kind: Kind,
+            scopeName: Qualifier?
     ): BeanDefinition<T> {
-        val beanDefinition = BeanDefinition<T>(name, T::class)
+        val beanDefinition = BeanDefinition<T>(qualifier, scopeName, T::class)
         beanDefinition.definition = definition
         beanDefinition.kind = kind
-        beanDefinition.createInstanceHolder()
         return beanDefinition
     }
 }
