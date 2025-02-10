@@ -1,0 +1,158 @@
+public final class org/koin/android/error/MissingAndroidContextException : java/lang/Throwable {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/koin/android/ext/android/AndroidKoinScopeExtKt {
+	public static final fun getKoinScope (Landroid/content/ComponentCallbacks;)Lorg/koin/core/scope/Scope;
+}
+
+public final class org/koin/android/ext/android/ComponentCallbackExtKt {
+	public static final fun getKoin (Landroid/content/ComponentCallbacks;)Lorg/koin/core/Koin;
+}
+
+public final class org/koin/android/ext/koin/KoinExtKt {
+	public static final fun androidContext (Lorg/koin/core/KoinApplication;Landroid/content/Context;)Lorg/koin/core/KoinApplication;
+	public static final fun androidFileProperties (Lorg/koin/core/KoinApplication;Ljava/lang/String;)Lorg/koin/core/KoinApplication;
+	public static synthetic fun androidFileProperties$default (Lorg/koin/core/KoinApplication;Ljava/lang/String;ILjava/lang/Object;)Lorg/koin/core/KoinApplication;
+	public static final fun androidLogger (Lorg/koin/core/KoinApplication;Lorg/koin/core/logger/Level;)Lorg/koin/core/KoinApplication;
+	public static synthetic fun androidLogger$default (Lorg/koin/core/KoinApplication;Lorg/koin/core/logger/Level;ILjava/lang/Object;)Lorg/koin/core/KoinApplication;
+}
+
+public final class org/koin/android/ext/koin/ModuleExtKt {
+	public static final field ERROR_MSG Ljava/lang/String;
+	public static final fun androidApplication (Lorg/koin/core/scope/Scope;)Landroid/app/Application;
+	public static final fun androidContext (Lorg/koin/core/scope/Scope;)Landroid/content/Context;
+}
+
+public final class org/koin/android/java/KoinAndroidApplication {
+	public static final field INSTANCE Lorg/koin/android/java/KoinAndroidApplication;
+	public static final fun create (Landroid/content/Context;)Lorg/koin/core/KoinApplication;
+	public static final fun create (Landroid/content/Context;Lorg/koin/core/logger/Level;)Lorg/koin/core/KoinApplication;
+	public static synthetic fun create$default (Landroid/content/Context;Lorg/koin/core/logger/Level;ILjava/lang/Object;)Lorg/koin/core/KoinApplication;
+}
+
+public final class org/koin/android/logger/AndroidLogger : org/koin/core/logger/Logger {
+	public fun <init> ()V
+	public fun <init> (Lorg/koin/core/logger/Level;)V
+	public synthetic fun <init> (Lorg/koin/core/logger/Level;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun display (Lorg/koin/core/logger/Level;Ljava/lang/String;)V
+}
+
+public abstract interface class org/koin/android/scope/AndroidScopeComponent {
+	public abstract fun getScope ()Lorg/koin/core/scope/Scope;
+	public abstract fun onCloseScope ()V
+}
+
+public final class org/koin/android/scope/AndroidScopeComponent$DefaultImpls {
+	public static fun onCloseScope (Lorg/koin/android/scope/AndroidScopeComponent;)V
+}
+
+public final class org/koin/android/scope/ComponentCallbacksExtKt {
+	public static final fun createScope (Landroid/content/ComponentCallbacks;Ljava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static synthetic fun createScope$default (Landroid/content/ComponentCallbacks;Ljava/lang/Object;ILjava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static final fun getOrCreateScope (Landroid/content/ComponentCallbacks;)Lkotlin/Lazy;
+	public static final fun getScopeOrNull (Landroid/content/ComponentCallbacks;)Lorg/koin/core/scope/Scope;
+	public static final fun newScope (Landroid/content/ComponentCallbacks;)Lkotlin/Lazy;
+}
+
+public abstract class org/koin/android/scope/ScopeService : android/app/Service, org/koin/android/scope/AndroidScopeComponent {
+	public fun <init> ()V
+	public fun getScope ()Lorg/koin/core/scope/Scope;
+	public fun onCloseScope ()V
+	public fun onCreate ()V
+	public fun onDestroy ()V
+}
+
+public final class org/koin/android/scope/ServiceExtKt {
+	public static final fun createScope (Landroid/app/Service;Ljava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static synthetic fun createScope$default (Landroid/app/Service;Ljava/lang/Object;ILjava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static final fun createServiceScope (Landroid/app/Service;)Lorg/koin/core/scope/Scope;
+	public static final fun destroyServiceScope (Landroid/app/Service;)V
+	public static final fun getScopeOrNull (Landroid/app/Service;)Lorg/koin/core/scope/Scope;
+	public static final fun serviceScope (Landroid/app/Service;)Lkotlin/Lazy;
+}
+
+public final class org/koin/androidx/fragment/android/ActivityExtKt {
+	public static final fun setupKoinFragmentFactory (Landroidx/fragment/app/FragmentActivity;Lorg/koin/core/scope/Scope;)V
+	public static synthetic fun setupKoinFragmentFactory$default (Landroidx/fragment/app/FragmentActivity;Lorg/koin/core/scope/Scope;ILjava/lang/Object;)V
+}
+
+public final class org/koin/androidx/fragment/android/KoinFragmentFactory : androidx/fragment/app/FragmentFactory, org/koin/core/component/KoinComponent {
+	public fun <init> ()V
+	public fun <init> (Lorg/koin/core/scope/Scope;)V
+	public synthetic fun <init> (Lorg/koin/core/scope/Scope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getKoin ()Lorg/koin/core/Koin;
+	public fun instantiate (Ljava/lang/ClassLoader;Ljava/lang/String;)Landroidx/fragment/app/Fragment;
+}
+
+public final class org/koin/androidx/fragment/koin/KoinApplicationExtKt {
+	public static final fun fragmentFactory (Lorg/koin/core/KoinApplication;)V
+}
+
+public final class org/koin/androidx/scope/ComponentActivityExtKt {
+	public static final fun activityRetainedScope (Landroidx/activity/ComponentActivity;)Lkotlin/Lazy;
+	public static final fun activityScope (Landroidx/activity/ComponentActivity;)Lkotlin/Lazy;
+	public static final fun createActivityRetainedScope (Landroidx/activity/ComponentActivity;)Lorg/koin/core/scope/Scope;
+	public static final fun createActivityScope (Landroidx/activity/ComponentActivity;)Lorg/koin/core/scope/Scope;
+	public static final fun createScope (Landroidx/activity/ComponentActivity;Ljava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static synthetic fun createScope$default (Landroidx/activity/ComponentActivity;Ljava/lang/Object;ILjava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static final fun getScopeOrNull (Landroidx/activity/ComponentActivity;)Lorg/koin/core/scope/Scope;
+}
+
+public final class org/koin/androidx/scope/FragmentExtKt {
+	public static final fun createFragmentScope (Landroidx/fragment/app/Fragment;Z)Lorg/koin/core/scope/Scope;
+	public static synthetic fun createFragmentScope$default (Landroidx/fragment/app/Fragment;ZILjava/lang/Object;)Lorg/koin/core/scope/Scope;
+	public static final fun fragmentScope (Landroidx/fragment/app/Fragment;Z)Lkotlin/Lazy;
+	public static synthetic fun fragmentScope$default (Landroidx/fragment/app/Fragment;ZILjava/lang/Object;)Lkotlin/Lazy;
+	public static final fun getScopeActivity (Landroidx/fragment/app/Fragment;)Lorg/koin/androidx/scope/ScopeActivity;
+	public static final fun getScopeOrNull (Landroidx/fragment/app/Fragment;)Lorg/koin/core/scope/Scope;
+}
+
+public abstract class org/koin/androidx/scope/RetainedScopeActivity : androidx/appcompat/app/AppCompatActivity, org/koin/android/scope/AndroidScopeComponent {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getScope ()Lorg/koin/core/scope/Scope;
+	public fun onCloseScope ()V
+	protected fun onCreate (Landroid/os/Bundle;)V
+}
+
+public abstract class org/koin/androidx/scope/ScopeActivity : androidx/appcompat/app/AppCompatActivity, org/koin/android/scope/AndroidScopeComponent {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getScope ()Lorg/koin/core/scope/Scope;
+	public fun onCloseScope ()V
+	protected fun onCreate (Landroid/os/Bundle;)V
+}
+
+public abstract class org/koin/androidx/scope/ScopeFragment : androidx/fragment/app/Fragment, org/koin/android/scope/AndroidScopeComponent {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getScope ()Lorg/koin/core/scope/Scope;
+	public fun onCloseScope ()V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+}
+
+public final class org/koin/androidx/scope/ScopeHandlerViewModel : androidx/lifecycle/ViewModel {
+	public fun <init> ()V
+	public final fun getScope ()Lorg/koin/core/scope/Scope;
+	public final fun setScope (Lorg/koin/core/scope/Scope;)V
+}
+
+public abstract class org/koin/androidx/scope/ScopeViewModel : androidx/lifecycle/ViewModel, org/koin/core/component/KoinScopeComponent {
+	public fun <init> ()V
+	public fun getKoin ()Lorg/koin/core/Koin;
+	public fun getScope ()Lorg/koin/core/scope/Scope;
+	protected fun onCleared ()V
+	public fun onCloseScope ()V
+}
+
+public final class org/koin/androidx/viewmodel/ext/android/ViewModelLazyKt {
+	public static final fun viewModelForClass (Landroidx/activity/ComponentActivity;Lkotlin/reflect/KClass;Lorg/koin/core/qualifier/Qualifier;Landroidx/lifecycle/ViewModelStoreOwner;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)Lkotlin/Lazy;
+	public static final fun viewModelForClass (Landroidx/fragment/app/Fragment;Lkotlin/reflect/KClass;Lorg/koin/core/qualifier/Qualifier;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)Lkotlin/Lazy;
+	public static synthetic fun viewModelForClass$default (Landroidx/activity/ComponentActivity;Lkotlin/reflect/KClass;Lorg/koin/core/qualifier/Qualifier;Landroidx/lifecycle/ViewModelStoreOwner;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lkotlin/Lazy;
+	public static synthetic fun viewModelForClass$default (Landroidx/fragment/app/Fragment;Lkotlin/reflect/KClass;Lorg/koin/core/qualifier/Qualifier;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lkotlin/Lazy;
+}
+
